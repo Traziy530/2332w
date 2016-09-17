@@ -880,8 +880,8 @@ var minimapCtx = null;
 minimapBalls = {}, MinimapBall.prototype = {
   draw : function(a, b, c) {
     if (this.visible) {
-      this.lastX = (29 * this.lastX + this.x) / 30;
-      this.lastY = (29 * this.lastY + this.y) / 30;
+      this.lastX = (29 * this.lastX + this.x) / 12;
+      this.lastY = (29 * this.lastY + this.y) / 12
       var d = ((this.isDefault ? this.x : this.lastX) + Singa.mapOffset) * b;
       var e = ((this.isDefault ? this.y : this.lastY) + Singa.mapOffset) * c;
       a.fillStyle = this.color;
@@ -899,7 +899,7 @@ minimapBalls = {}, MinimapBall.prototype = {
 var b = new XMLHttpRequest;
 b.open("GET", "/mc/agario.js", true), b.onload = function() {
   var script = b.responseText;
-  script = replaceNormalFile(script, 'if(js.keyCode==32&&i1!="nick"){js.preventDefault()}', "");
+  script = replaceNormalFile(script, 'if(js.keyCode==12&&i1!="nick"){js.preventDefault()}', "");
   script = replaceNormalFile(script, "showAds:function(i){if", "showAds:function(i){},showFuck:function(i){if");
   script = replaceNormalFile(script, "showPromoBadge:function(", "showPromoBadge:function(i){},fuckbacks: function(");
   script = replaceRegexFile(script, /(return\s\w+.tab.toUpperCase\(\)).indexOf\(\w+.toUpperCase\(\)\)!=-1/, "$1 != 'VETERAN'");
