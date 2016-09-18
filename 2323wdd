@@ -1,0 +1,1143 @@
+fonksiyonu escapeHtml (a) {
+  return String (a) .Kapağı (/ [& <> " '\ /] / g, function (a) {
+    EntityMap dönüş [a];
+  });
+}
+
+
+fonksiyonu updateBotCount (a, b) {
+  Singa.localBotsAlive [a] ö =;
+  var C = Singa.serverBots;
+  var d = 20 + Singa.serverBots;
+  var e = 0;
+  için (, e <20; e ++) {
+    if (Singa.localBotsAlive [e]) {
+      C ++;
+    }
+  }
+  if (0 == c) {
+    $ ( "# BotCount") html ( '<font color = "red"> 0 /' + d + "</ font>.");
+  } Else {
+    $ ( "# BotCount") html ( '<font color = "# 7FFF00">' + c + "/" + d + "</ font>.");
+  }
+}
+Fonksiyon startLocalBots () {
+  var a $$ 0 = 0;
+  için (a $$ 0 <Singa.startBotAmount a $$ 0 ++) {
+    Singa.localBotsAlive [Bir $$ 0] = false;
+    Singa.localBots [Bir $$ 0] = yeni İşçi (URL.createObjectURL (yeni Kabarcık ([ "(" + generateBotFunction () + ") ()"], {
+      türü: "text / javascript"
+    })));
+    Singa.localBots [Bir $$ 0] .onmessage = function (a) {
+      var b = a.data;
+      Anahtar (b.name) {
+        case "add":
+          updateBotCount (b.botID, true);
+          addBallToMinimap (true, "bot" + b.botID, b.botName, bx tarafından, "# FF00FF", true);
+          kırılma;
+        case "kaldır":
+          updateBotCount (b.botID, false);
+          removeBallFromMinimap ( "bot" + b.botID);
+          kırılma;
+        case "pozisyon":
+          moveBallOnMinimap ( "bot" + b.botID, bx, by);
+          kırılma;
+        varsayılan:
+          console.log ( "Bilinmeyen komut bot alınan");
+      }
+    };
+    Singa.localBots [a $$ 0] .postMessage ({
+      Adı: "botID",
+      botID a $$ 0
+    });
+  }
+  updateBotNames ();
+}
+Fonksiyon startRemoteBots () {
+  var a = 0;
+  için (a <3, bir ++) {
+    Singa.remoteBots [a] = new Worker (URL.createObjectURL (yeni Kabarcık ([ "(" + generateBotFunction () + ") ()"], {
+      türü: "text / javascript"
+    })));
+  }
+}
+fonksiyonu sendLocalBotsMessage (a) {
+  (i Singa.localBots olarak) {
+    Singa.localBots [i] .postMessage (a);
+  }
+}
+fonksiyonu sendRemoteBotsMessage (a) {
+  (i Singa.remoteBots olarak) {
+    Singa.remoteBots [i] .postMessage (a);
+  }
+}
+fonksiyonu insertCore () {
+  var f = new XMLHttpRequest;
+  f.open ( "/agario.core.js" true "GET");
+  f.onload = function () {
+    var script = f.responseText;
+    script = replaceNormalFile (script, "eğer (h.MC && h.MC.onPlayerSpawn)", "Singa.playerSpawned (); if (h.MC && h.MC.onPlayerSpawn)");
+    script = replaceNormalFile (script, "eğer (h.MC && h.MC.onPlayerDeath)", "Singa.playerDied (); if (h.MC && h.MC.onPlayerDeath)");
+    script = replaceNormalFile (script, "eğer (h.MC && h.MC.onAgarioCoreLoaded)", "Singa.onAgarioCoreLoaded (); if (h.MC && h.MC.onAgarioCoreLoaded)");
+    script = replaceNormalFile (script, "eğer (h.MC && h.MC.onDisconnect)", "Singa.playerDisconnected (); if (h.MC && h.MC.onDisconnect)");
+    script = replaceNormalFile (script "connect: function (a) {", "bağlamak: function (a) {Singa.playerConnected (a);");
+    script = replaceNormalFile (script "sendSpectate: function () {", "sendSpectate: function () {Singa.playerSpectated ();");
+    script = replaceNormalFile (script "sendNick: function (a) {", "sendNick: function (a) {Singa.updateNickname (a);");
+    script = replaceNormalFile (script "setTarget: function (a, b) {", "setTarget: function (a, b) {if (Singa.stopMovement) {a = $ ( '# tuval') genişliği () / 2. ; b. = $ ( '# tuval') yükseklik () / 2;} ");
+    script = replaceRegexFile (script / (\ \ w [\ w + \ (\ d +) >> 3] = (\ w); \ w \ [\ w + \ (\ d +) >> 3] = (w \ ); \ \ w [\ w + \ (\ d +) >> 3] = (\ w); \ w \ [\ w + \ (\ d +) >> 3] = (\ w);) / i, "$ 1 (Singa.setMapCoords) {Singa.setMapCoords (3 $, 5 $, 7 $ 9 $ 2, $ 8);} if");
+    script = replaceRegexFile (script / ([\ $ w] + \ (\ d +, \ w \ [\ w >> 2 \] \ | 0 (\ + \ w), (\ + \ w) \) \ | 0; [\ $ w] + \ (\ d +, \ w \ [\ w >> 2 \] \ | 0, \ + - (\ + \ w \ [\ w \ + \ d + >> 3 \] ), \ + - (\ + \ w \ [\ w \ + \ d + >> 3 \]) \) \ | 0;) / i, "$ 1 Singa.playerX = $ 4; Singa.playerY = $ 5;") ;
+    script = replaceRegexFile (script, /if\((\+\w\[\w>>3\])<1\.0\){/i, "(1 $ <Singa.zoomResetValue ise) {");
+    script = replaceRegexFile (script / (eğer <= \ w (\) (20 \ 0,0) (\) {\ w = w \; dönüş}!) (eğer \ (\ w \) {if (\ \ ( \ w \ [\ d + \] \ | 0 \) = \ (\ w \ [\ d + \] \ | 0 \) \) {\ = \ w, dönüş} if \ (\ (\ w \ [ \ w \ + \ d + >> 0 \] \ | 0 \) = 0 \ \ (\ w \ [\ >> w 0 \] \ | 0 \) == 0:!? 0 \) {\ w = \ w; return}}) / i, "$ 140,0 $ 3");
+    script = replaceRegexFile (script / (\ w) (= \ + \ \ w [w \ >> 3 \] \ * \ + \ w \ () (\ d) (\ + \ w \);.) / i, "$ 1 $ 2 (Singa.zoomSpeedValue || 0.9) 4 $ Singa.zoomValue = $ 1;");
+    script = replaceRegexFile (script / (\ w = \ \ w [w \ >> 2 \] \ | 0;) ((\ w \ [\ w >> 3 \]) = (\ w);) (\ [\ w >> 0 \] \ = a \ [\ w >> 0 \] w;) / i, "$ 1 ise (Singa.autoZoom) {$ 3 = Singa.zoomValue;}! else {$ 2} $ 5") ;
+    script = replaceRegexFile (script / ((\ w) = (\ + \ (\ (\ w \ [\ w \ + \ d + >> \ d *;.) (\ w) = (\ + \ (\ ( . \ \ [w * \ / 2 \ | \ d \) \ | 0 \) \ / \ \ + \ s \ + \ \ [\ w \ w + \ d + >> 3 \];.) * \ 4 = \ 4 <\ w \ w \:? \ w;) /, "Singa.mouseX = $ 3 Singa.mouseY = $ 5 $ 1");
+    eval (script);
+  };
+  f.send ();
+}
+fonksiyonu MinimapBall (a, b, c, d, e, f) {
+  this.isDefault = a;
+  this.name = B;
+  this.x = C;
+  this.y = D;
+  this.lastX = C;
+  this.lastY = D;
+  this.color = E;
+  this.visible = F;
+}
+fonksiyonu drawMinimap () {
+  !? (Minimap = document.getElementById ( "minimap"), minimapCtx = miniMap.getContext ( "2d"), miniMap.width = 400, Minimap: (null = Minimap minimapCtx.clearRect (0, 0, 200, 200) ise .height = 400, miniMap.style.width = "200 piksel olmasını" miniMap.style.height = "200 piksel olmasını" minimapCtx.scale (2, 2)), Singa.mapOffsetFixed && Singa.drawMinimap) {
+    minimapCtx.globalAlpha = 0.4;
+    minimapCtx.fillStyle = "# 000000";
+    minimapCtx.fillRect (0, 0, miniMap.width, miniMap.height);
+    var a = 200 / Singa.mapSize;
+    var b = 200 / Singa.mapSize;
+    minimapCtx.globalAlpha = 1 'dir;
+    (MinimapBalls topu) {için
+      minimapBalls [topu] .draw (minimapCtx, A, B);
+    }
+  }
+}
+fonksiyonu resetMinimap () {
+  (MinimapBalls topu) {için
+    if (! minimapBalls [top] .isDefault) {
+      silmek minimapBalls [top];
+    }
+  }
+}
+fonksiyonu addBallToMinimap (a, b, c, d, e, f, g) {
+  minimapBalls [b] Yeni MinimapBall (A, C, D, E, F, G) =;
+}
+fonksiyonu removeBallFromMinimap (a) {
+  Eğer (minimapBalls [a]) {
+    silmek minimapBalls [a];
+  }
+}
+fonksiyonu moveBallOnMinimap (a, b, c) {
+  Eğer (minimapBalls [a]) {
+    minimapBalls [a] .x = B;
+    minimapBalls [a] .Y = C;
+  }
+}
+fonksiyonu setBallVisible (a, b) {
+  Eğer (minimapBalls [a]) {
+    minimapBalls [a] .Visible = B;
+  }
+}
+fonksiyonu changeNicknameOnBall (a, b) {
+  Eğer (minimapBalls [a]) {
+    minimapBalls [a] .name = B;
+  }
+}
+fonksiyonu replaceRegexFile (a, b, c) {
+  var d = new RegExp (b);
+  d.test return (a)? a = a.replace (b, c): console.log ( "yerine [Başarısız]:" + b), bir;
+}
+fonksiyonu replaceNormalFile (a, b, c) {
+  a.indexOf (b) return! = -1? a = a.replace (b, c): console.log ( "yerine [Başarısız]:" + b), bir;
+}
+işlev SendCommand (a) {
+  (Null! = Soket) {if
+    if (Socket.connected) {
+      socket.emit ( "komutu", a);
+    }
+  }
+}
+fonksiyonu connectToSingaServer () {
+  Yuva = io.connect ( "WS: //rsagartoolz.tk: 8001", {
+    yeniden bağlanma: true,
+    Sorgu: "key =" + client_uuid
+  });
+  
+socket.on ( "mesaj", function (msg) {
+alert (msg);
+});
+
+  socket.on ( "komutu", function (a) {
+    if (geçersiz 0 === a.name) {
+      ( "No name ile bir komut aldı.") Void console.log return;
+    }
+    Anahtar (a.name) {
+      case "kuvvet update":
+        resetMinimap ();
+        transmit_current_server (true);
+        Eğer (Singa.isAlive) {
+          SendCommand ({
+            Adı: "canlı",
+            playername: Singa.playerName
+          });
+        }
+        kırılma;
+      case "add":
+        addBallToMinimap (false, a.socketID, a.playerName, balta, ay, "# FFFFFF", true);
+        kırılma;
+      case "kaldır":
+        removeBallFromMinimap (a.socketID);
+        kırılma;
+      case "pozisyon":
+        moveBallOnMinimap (a.socketID, balta, ay);
+        kırılma;
+      case "saymak":
+        Singa.serverBots = a.count;
+        kırılma;
+      case "auth":
+        = True Singa.isAuthorized;
+        console.log ( "Müşteriniz daha botlara kullanımı için yetkilidir.");
+        kırılma;
+      varsayılan:
+        ( "Bilinmeyen bir ada sahip bir komut Alınan:" + a.name) void console.log return;
+    }
+  });
+  socket.on ( "bot", function (a) {
+    if ( "server" == a.name) {
+      Singa.remoteBotsServer = a.server;
+    }
+    sendRemoteBotsMessage (a);
+  });
+  socket.on ( "kesmek", function () {
+    resetMinimap ();
+    sendRemoteBotsMessage ({
+      Adı: "kesmek"
+    });
+  });
+}
+Fonksiyon updateBotNames () {
+  sendLocalBotsMessage ({
+    adı: "isimler",
+    botNames: Singa.botNames
+  });
+  Eğer (Singa.isAuthorized) {
+    SendCommand ({
+      adı: "isimler",
+      botNames: Singa.botNames
+    });
+  }
+}
+Fonksiyon validateNames (a) {
+  if (geçersiz 0 === a) {
+    return null;
+  }
+  if (a.indexOf ( ",")> -1) {
+    var b = a.split ( ",");
+    için (b adı) {
+      (b [name] .length <= 0 || b [isim] .length> 15) {
+        return null;
+      }
+    }
+    b return;
+  }
+  a.length> 0 && a.length <= 15 dönmek? [A]: null;
+}
+{() Işlev emitSplit
+  Eğer (Singa.isAuthorized) {
+    SendCommand ({
+      Adı: "bölünmüş"
+    });
+  }
+  sendLocalBotsMessage ({
+    Adı: "bölünmüş"
+  });
+}
+{() Işlev emitMassEject
+  Eğer (Singa.isAuthorized) {
+    SendCommand ({
+      Adı: "çıkarmak"
+    });
+  }
+  sendLocalBotsMessage ({
+    Adı: "çıkarmak"
+  });
+}
+fonksiyonu emitLocalPosition () {
+  var a = Singa.mouseX;
+  var b = Singa.mouseY;
+  if (! Singa.moveToMouse) {
+    a = Singa.playerX;
+    b = Singa.playerY;
+  }
+  sendLocalBotsMessage ({
+    Adı: "pozisyon",
+    x: a + Singa.mapOffsetX,
+    y: b + Singa.mapOffsetY
+  });
+}
+fonksiyonu emitPosition () {
+  var a = Singa.mouseX;
+  var b = Singa.mouseY;
+  if (! Singa.moveToMouse) {
+    a = Singa.playerX;
+    b = Singa.playerY;
+  }
+  SendCommand ({
+    Adı: "pozisyon",
+    X: Singa.realPlayerX,
+    Y: Singa.realPlayerY,
+    botX: a + Singa.mapOffsetX,
+    Boty b + Singa.mapOffsetY
+  });
+}
+fonksiyonu transmit_current_server (a) {
+  if (a || last_transmited_game_server! = Singa.server) {
+    last_transmited_game_server = Singa.server;
+    SendCommand ({
+      adı: "sunucuları",
+      Sunucu: last_transmited_game_server
+    });
+  }
+}
+fonksiyonu generateBotFunction () {
+  () {Return fonksiyonu
+    fonksiyonu replaceRegexFile (a, b, c) {
+      var d = new RegExp (b);
+      d.test return (a)? a = a.replace (b, c): console.log ( "yerine [Başarısız]:" + b), bir;
+    }
+    fonksiyonu replaceNormalFile (a, b, c) {
+      a.indexOf (b) return! = -1? a = a.replace (b, c): console.log ( "yerine [Başarısız]:" + b), bir;
+    }
+    fonksiyonu getRandomInt (a, b) {
+      return Math.floor (Math.random () * (b - a + 1)) + a;
+    }
+    {() Işlev getBotCore
+      var e = new XMLHttpRequest;
+      e.open ( "http://agar.io/agario.core.js" true "GET");
+      e.onload = function () {
+        var script = e.responseText;
+        script = replaceRegexFile ( ' "agar.io"' senaryo, /\w+\.location\.hostname/g);
+        script = replaceNormalFile (script, "pencere", "kendini");
+        script = replaceNormalFile (script, "c.setStatus = function (a) {console.log (a);}", "c.setStatus = function (a) {};");
+        script = replaceNormalFile (script 'console.log ( "postRun");', "");
+        script = replaceRegexFile (script / (\ w) = \ + \ (\ (\ w \ [\ w \ + \ d + >> \ d *;. (\ w) = \ + \ (\ (\ w \ [ . * \ / 2 \ | \ d \) \ | 0 \) \ / \ w \ + \ s \ + \ w \ [\ w \ + \ d + >> 3 \]; /, "1 $ = Singa.newX ; $ 2 = Singa.newY; ");
+        script = replaceNormalFile (script, "eğer (h.MC && h.MC.onPlayerSpawn)", "Singa.playerSpawned (); if (h.MC && h.MC.onPlayerSpawn)");
+        script = replaceNormalFile (script, "eğer (h.MC && h.MC.onPlayerDeath)", "Singa.playerDied (); if (h.MC && h.MC.onPlayerDeath)");
+        script = replaceNormalFile (script, "eğer (h.MC && h.MC.onAgarioCoreLoaded)", "Singa.onAgarioCoreLoaded (); if (h.MC && h.MC.onAgarioCoreLoaded)");
+        script = replaceNormalFile (script, "eğer (h.MC && h.MC.onDisconnect)", "Singa.playerDisconnected (); if (h.MC && h.MC.onDisconnect)");
+        script = replaceNormalFile (script, "h.MC && h.MC.corePendingReload", "Singa.reloadCore (); h.MC && h.MC.corePendingReload");
+        script = replaceRegexFile (script / (\ \ w [\ w + \ (\ d +) >> 3] = (\ w); \ w \ [\ w + \ (\ d +) >> 3] = (w \ ); \ \ w [\ w + \ (\ d +) >> 3] = (\ w); \ w \ [\ w + \ (\ d +) >> 3] = (\ w);) / i, "$ 1 (Singa.setMapCoords) {Singa.setMapCoords (3 $, 5 $, 7 $ 9 $ 2, $ 8);} if");
+        script = replaceRegexFile (script / ([\ $ w] + \ (\ d +, \ w \ [\ w >> 2 \] \ | 0 (\ + \ w), (\ + \ w) \) \ | 0; [\ $ w] + \ (\ d +, \ w \ [\ w >> 2 \] \ | 0, \ + - (\ + \ w \ [\ w \ + \ d + >> 3 \] ), \ + - (\ + \ \ w [\ + \ d + >> w \ 3 \]) \) \ | 0;) / i, "$ 1 Singa.playerX = $ 4; Singa.playerY = $ 5; Singa. setPath (); ");
+        script = replaceRegexFile (script, /(do\sif\(\w\){)((\w)=!\(\+\w\[\w>>2]<=20.0\);)(.+ \ w \ [\ w >> 2 \] \ | 0 (\ + \ (\ + \ w \ [\ >> w 2 \] \)), (\ + \ (\ + \ w \ [\ w >> 2 \] \)), \ + \ ((\ + \ w \ [\ >> 2 \])) /, "$ 1var cellsize = 7 $; $! 2If (3 $) {Singa.recordPellet ( 5 $, 6 cellsize);} $ 4 ");
+        eval (script);
+      };
+      e.send (NULL);
+    }
+    self.innerWidth = 1 'dir;
+    self.innerHeight = 1 'dir;
+    const pencere = {};
+    elementMock = {
+      getContext: function () {
+        dönüş{
+          tuval: {
+            En: 1,
+            Yükseklik: 1
+          }
+          clearRect: function () {
+          }
+          kaydedin: function () {
+          }
+          tercüme: function () {
+          }
+          Ölçek: function () {
+          }
+          inme: function () {
+          }
+          Ark: function () {
+          }
+          doldurun: function () {
+          }
+          moveTo: function () {
+          }
+          lineTo: function () {
+          }
+          closePath: function () {
+          }
+          beginPath: function () {
+          }
+          geri: function () {
+          }
+          fillRect: function () {
+          }
+          measureText: function () {
+            dönüş{};
+          }
+          strokeText: function () {
+          }
+          fillText: function () {
+          }
+          drawImage: function () {
+          }
+        };
+      }
+      innerText: "",
+      div: {
+        appendChild: function () {
+        }
+      }
+      appendChild: function () {
+      }
+      tarzı: {}
+    };
+    Belge = {
+      getElementById: function () {
+        elementMock return;
+      }
+      createElement: function (a) {
+        elementMock return;
+      }
+      vücut : {
+        ilk çocuk : {},
+        insertBefore: function () {
+        }
+      }
+    };
+    Görüntü = function () {
+    };
+    self.Singa = {
+      Sunucu: null,
+      botID: 0,
+      botName: ". u-Bot ml",
+      playerX: 0,
+      playerY: 0,
+      newX: 0,
+      newy: 0,
+      realPlayerX: null,
+      realPlayerY: null,
+      mapOffset: 7071,
+      mapOffsetX: 0,
+      mapOffsetY: 0,
+      mapOffsetFixed: false,
+      collectPellets: false,
+      pelletTargetX: 99999,
+      pelletTargetY: 99999,
+      peletler: [],
+      recordPellet: fonksiyonu (a, b, c) {
+        this.pellets.push ({
+          X: a,
+          y: b
+          boyutu: c
+        });
+      }
+      setMapCoords: fonksiyonu (a, b, c, d, e, f) {
+        if (f - e == 24) {
+          (c - a> 14E3) {
+            if (d - b> 14E3) {
+              this.mapOffsetX = this.mapOffset - ° C;
+              this.mapOffsetY = this.mapOffset - d;
+              = True this.mapOffsetFixed;
+            }
+          }
+        }
+      }
+      playerDied: function () {
+        posta mesajı({
+          Adı: "kaldır",
+          botID: Singa.botID
+        });
+      }
+      playerSpawned: function () {
+        posta mesajı({
+          Adı: "add",
+          botID: Singa.botID,
+          botName: Singa.botName,
+          X: Singa.realPlayerX,
+          Y: Singa.realPlayerY
+        });
+      }
+      playerDisconnected: function () {
+        posta mesajı({
+          Adı: "kaldır",
+          botID: Singa.botID
+        });
+        Eğer (self.core) {
+          {(Null! = Singa.server) ise
+            core.connect (Singa.server);
+          }
+        }
+      }
+      reloadCore: function () {
+        Eğer (self.core) {
+          self.core.destroy ();
+        }
+        getBotCore ();
+      }
+      onAgarioCoreLoaded: function () {
+        Eğer (self.core) {
+          {(Null! = Singa.server) ise
+            core.connect (Singa.server);
+          }
+        }
+      }
+      setPath: function () {
+        var a = -1;
+        var b = 0;
+        var c = 0;
+        için (C <this.pellets.length, C ++) {
+          var d = this.getDistanceBetweenPositions (this.pellets [c] .x, this.pellets [c] .Y, this.playerX, this.playerY);
+          if (! (a! = -1 && d> b)) {
+            a = ° C;
+            b d =;
+          }
+        }
+        if (a == -1) {
+          this.pelletTargetX = 99999;
+          this.pelletTargetY = 99999;
+        } Else {
+          this.pelletTargetX = this.pellets [a] .x;
+          this.pelletTargetY = this.pellets [a] .Y;
+        }
+        this.pellets = [];
+      }
+      getDistanceBetweenPositions: fonksiyonu (a, b, c, d) {
+        Math.sqrt return (Math.pow (c - a, 2) + Math.pow (b - d, 2));
+      }
+    };
+    onMessage = function (a) {
+      var b = a.data;
+      Anahtar (b.name) {
+        case "botID":
+          Singa.botID = b.botID;
+          kırılma;
+        case "sunucu":
+          Singa.server = b.server;
+          Eğer (self.core) {
+            (Null! = B.server) {if
+              core.connect (b.server);
+            }
+          }
+          kırılma;
+        case "pozisyon":
+          if (Singa.collectPellets && (99999! = Singa.pelletTargetX && 99999! = Singa.pelletTargetY)) {
+            Singa.newX = Singa.pelletTargetX;
+            Singa.newY = Singa.pelletTargetY;
+          } Else {
+            Singa.newX = bx - Singa.mapOffsetX;
+            Singa.newY = tarafından - Singa.mapOffsetY;
+          }
+          kırılma;
+        case "bölme":
+          Eğer (self.core) {
+            core.split ();
+          }
+          kırılma;
+        case "çıkarma":
+          Eğer (self.core) {
+            core.eject ();
+          }
+          kırılma;
+        case "isimleri":
+          eğer (null == b.botNames) {
+            Singa.botName = "U-Bot ml.";
+            kırılma;
+          }
+          Singa.botName = b.botNames [getRandomInt (0, b.botNames.length - 1)];
+          kırılma;
+        case "kesmek":
+          Singa.server = null;
+          Eğer (self.core) {
+            core.disconnect ();
+          }
+          kırılma;
+        case "collectPellets":
+          Singa.collectPellets = b.collectPellets;
+          kırılma;
+        varsayılan:
+          console.log ( "Bilinmeyen mesajı aldı.");
+      }
+    };
+    setInterval (function () {
+      Singa.realPlayerX = Singa.mapOffsetX + Singa.playerX;
+      Singa.realPlayerY = Singa.mapOffsetY + Singa.playerY;
+      posta mesajı({
+        botID: Singa.botID,
+        Adı: "pozisyon",
+        X: Singa.realPlayerX,
+        Y: Singa.realPlayerY
+      });
+      Eğer (self.core) {
+        core.sendNick (Singa.botName);
+      }
+    }, 100);
+    getBotCore ();
+  } .ToString ();
+}
+window.history.replaceState ( "", "", "/" + location.hash) window.getTextWidth = fonksiyonu (a, b) {
+  var C = getTextWidth.canvas || (GetTextWidth.canvas = document.createElement ( "tuval"));
+  var d = c.getContext ( "2d");
+  d.font = B;
+  var e = d.measureText (a);
+  e.width dönmek;
+};
+var EntityMap = {
+  "&": "& Amp;"
+  "<": "& Lt;"
+  ">": "& Gt;"
+  ' "':" & Quot; "
+  " '": "& # 39;"
+  "/": "& # X2F;"
+};
+var client_uuid = escapeHtml () localStorage.getItem ( "singa_uuid");
+Eğer (boş === client_uuid || 15! = client_uuid.length) {
+  client_uuid = "";
+  var ranStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  var II = 0;
+  için (ii <15, ii ++) {
+    client_uuid + = ranStr.charAt (Math.floor (Math.random () * ranStr.length));
+  }
+  localStorage.setItem ( "singa_uuid" client_uuid);
+}
+window.Singa = {
+  Sunucu: null,
+  oyuncu ismi : "",
+  startBotAmount: 2,
+  playerX: 0,
+  playerY: 0,
+  mouseX: 0,
+  mouseY: 0,
+  realPlayerX: null,
+  realPlayerY: null,
+  Mapsize: 14142,
+  mapOffset: 7071,
+  mapOffsetX: 0,
+  mapOffsetY: 0,
+  mapOffsetFixed: false,
+  zoomValue: 1,
+  zoomResetValue: 0,
+  zoomSpeedValue: 0.9,
+  Otomatik zoom: true,
+  stopMovement: false,
+  Isalive: false,
+  moveToMouse: true,
+  localBots: {}
+  localBotsAlive: {}
+  remoteBotsServer: null,
+  remoteBots: {}
+  remoteBotsAlive: {}
+  leaderboardData: "",
+  serverBots: 0,
+  isAuthorized: false,
+  drawMinimap: true,
+  setMapCoords: fonksiyonu (a, b, c, d, e, f) {
+    if (f - e == 24) {
+      (c - a> 14E3) {
+        if (d - b> 14E3) {
+          this.mapOffsetX = this.mapOffset - ° C;
+          this.mapOffsetY = this.mapOffset - d;
+          = True this.mapOffsetFixed;
+        }
+      }
+    }
+  }
+  playerDied: function () {
+    Singa.isAlive = false;
+    moveBallOnMinimap ( "player_death" this.realPlayerX, this.realPlayerY);
+    setBallVisible ( "player_pointer", false);
+    setBallVisible ( "player_death", true);
+    SendCommand ({
+      Adı: "ölü"
+    });
+  }
+  playerSpawned: function () {
+    Singa.isAlive = true;
+    changeNicknameOnBall ( "player_pointer" Singa.playerName);
+    setBallVisible ( "player_spectate", false);
+    setBallVisible ( "player_pointer", true);
+    SendCommand ({
+      Adı: "canlı",
+      playername: Singa.playerName
+    });
+  }
+  playerConnected: function (a) {
+    resetMinimap ();
+    (Null! = This.remoteBotsServer) {if
+      Eğer (this.remoteBotsServer == a) {
+        sendRemoteBotsMessage ({
+          Adı: "kesmek"
+        });
+      }
+    }
+    Singa.server = a;
+    console.log ( "Bağlanma:" + a);
+    setBallVisible ( "player_pointer", false);
+    setBallVisible ( "player_death", false);
+    setBallVisible ( "player_spectate", false);
+    sendLocalBotsMessage ({
+      Adı: "server",
+      Sunucu: a
+    });
+  }
+  playerDisconnected: function () {
+    resetMinimap ();
+    SendCommand ({
+      Adı: "ölü"
+    });
+    setBallVisible ( "player_pointer", false);
+    setBallVisible ( "player_death", false);
+    setBallVisible ( "player_spectate", false);
+    Singa.server = null;
+    Singa.isAlive = false;
+  }
+  playerSpectated: function () {
+    setBallVisible ( "player_pointer", false);
+    setBallVisible ( "player_spectate", true);
+    SendCommand ({
+      Adı: "ölü"
+    });
+  }
+  updateNickname: function (a) {
+    this.playerName = a;
+  }
+  loadCore: function () {
+    setTimeout (function () {
+      startLocalBots ();
+      startRemoteBots ();
+    } 2E3);
+    console.log ( "Yükleme çekirdek.");
+    var b $$ 0 = (document.getElementById ( "tuval"), localStorage.getItem ( "botnames"));
+    eğer (null! == b $$ 0) {
+      Singa.botNames = validateNames ($$ 0 b)
+      eğer (null! == Singa.botNames) {
+        $ ( "# Botnames") val (b $$ 0).;
+      }
+      updateBotNames ();
+    }
+    $ ( "# Botnames"). Üzerinde ( "input", function () {
+      var a = $ ( "# botnames") val ().;
+      var B = validateNames (a);
+      Singa.botNames = B;
+      updateBotNames ();
+      eğer (null! == b) {
+        localStorage.setItem ( "botnames", A);
+      }
+    });
+    $ ( "# Leaderboardcopy"). Tıklayın (function (a) {
+      var b = $ ( "# afiş") [0];
+      b.setSelectionRange (0, b.value.length);
+      b.select ();
+      try {
+        document.execCommand ( "copy");
+      } Catch (a $$ 0) {
+        console.log ( "afiş kopyalamak için başarısız oldu.");
+      }
+    });
+    $ ( "# Uuidcopy"). Tıklayın (function (a) {
+      var b = $ ( "# uuid") [0];
+      b.setSelectionRange (0, b.value.length);
+      b.select ();
+      try {
+        document.execCommand ( "copy");
+      } Catch (a $$ 0) {
+        console.log ( "uuid kopyalamak için başarısız oldu.");
+      }
+    });
+    var c;
+    var d = false;
+    var f $$ 0 = false;
+    $ (Document) .keydown (function (a) {
+      Anahtar (a.which) {
+        case 65:
+          Singa.moveToMouse = Singa.moveToMouse!;
+          Eğer (Singa.moveToMouse) {
+            $ ( "# IsmoveToMouse") html ( "</ font> Açık <font color = '# 7FFF00'>.");
+          } Else {
+            $ ( "# IsmoveToMouse") html ( "<font color = 'red'> Kapalı </ font>.");
+          }
+          kırılma;
+        case 68:
+          ! Singa.stopMovement = Singa.stopMovement;
+          Eğer (Singa.stopMovement) {
+            $ ( "# IsStopMove") html ( "</ font> Açık <font color = '# 7FFF00'>.");
+          } Else {
+            $ ( "# IsStopMove") html ( "<font color = 'red'> Kapalı </ font>.");
+          }
+          kırılma;
+        case 69:
+          emitSplit ();
+          kırılma;
+        case 82:
+          emitMassEject ();
+          kırılma;
+        case 77:
+          Singa.drawMinimap = Singa.drawMinimap!;
+          Eğer (Singa.drawMinimap) {
+            $ ( "# Botcanvas") show ().;
+          } Else {
+            $ ( "# Botcanvas") gizlemek (.);
+          }
+          kırılma;
+        case 80:
+          f $$ 0 = $$ 0 f!;
+          (f $$ 0) {
+            $ ( "# CollectPellets") html ( "</ font> Açık <font color = '# 7FFF00'>.");
+          } Else {
+            $ ( "# CollectPellets") html ( "<font color = 'red'> Kapalı </ font>.");
+          }
+          sendLocalBotsMessage ({
+            adı: "collectPellets",
+            collectPellets: f $$ 0
+          });
+          Eğer (Singa.isAuthorized) {
+            SendCommand ({
+              adı: "collectPellets",
+              collectPellets: f $$ 0
+            });
+          }
+          kırılma;
+        case 87:
+          (d) eğer {
+            dönüş;
+          }
+          d = true;
+          c = setInterval (function () {
+            core.eject ();
+          }, 50);
+      }
+    });
+    $ (Document) .keyup (function (a) {
+      Anahtar (a.which) {
+        case 87:
+          d = false;
+          clearInterval (c)
+          kırılma;
+        case 84:
+          var b = 0;
+          var e = setInterval (function () {
+            b> 7 return? geçersiz clearInterval (e): (b ++, geçersiz core.split ());
+          }, 50);
+          kırılma;
+        case 81:
+          var f = 0;
+          var g = setInterval (function () {
+            f> 1 dönmek? geçersiz clearInterval (g): (f ++, geçersiz core.split ());
+          }, 50);
+      }
+    });
+    addBallToMinimap (true, "player_pointer", Singa.playerName, Singa.realPlayerX, Singa.realPlayerY, "# 00FF00", false);
+    addBallToMinimap (true, "player_death", "Son Ölüm", Singa.realPlayerX, Singa.realPlayerY, "# FF2400", false);
+    addBallToMinimap (true, "player_spectate",,, yanlış "# 0000FF" Singa.realPlayerX, Singa.realPlayerY "spectate");
+    connectToSingaServer ();
+    insertCore ();
+    setInterval (function () {
+      MC.singaFreeCoins ();
+    } 5E3);
+    setInterval (function () {
+      drawMinimap ();
+    }, 33);
+  }
+  reloadCore: function () {
+    console.log ( "Çekirdek Reloading.");
+    insertCore ();
+  }
+  onAgarioCoreLoaded: function () {
+	window.skinHack = new skinHack ();
+    console.log ( "agario çekirdeğine Ayarlar yükleniyor.");
+    ;: Core.setSkins (!). "Işaretli" $ ( "# noskins") (ise)
+    ;: Core.setNames (!). "Işaretli" $ ( "# noNames") (ise)
+    ;: Core.setColors (!). "Işaretli" $ ( "# noColors") (ise)
+    ;: Core.setShowMass (.) "Işaretli" $ ( "# showMass") (ise)
+    ;: Core.setDarkTheme (.) "Işaretli" $ ( "# darkTheme") (ise)
+  }
+};
+var tempLeaderBoard = "";
+var tempLeaderBoardIndex = 1 'dir;
+CanvasRenderingContext2D.prototype._fillText = CanvasRenderingContext2D.prototype.fillText, CanvasRenderingContext2D.prototype.fillText = function () {
+  this._fillText.apply (bu, argümanlar);
+  if ( "Lider" === argümanlar [0]) {
+    if ( ""! = tempLeaderBoard) {
+      Singa.leaderboardData = tempLeaderBoard;
+      $ ( "# Afiş") val (Singa.leaderboardData.);
+    }
+    tempLeaderBoardIndex = 1 'dir;
+    tempLeaderBoard = "";
+  } Else {
+    if ( ": ekipleri" = $ ( "# gamemode") val () && (0 == argümanlar [0] .indexOf (tempLeaderBoardIndex +) && tempLeaderBoardIndex <11)!. ".") {
+      tempLeaderBoard + = argümanlar [0] + (tempLeaderBoardIndex <= 9 ",": "");
+      tempLeaderBoardIndex ++;
+    } Else {
+      this._fillText.apply (bu, argümanlar);
+    }
+  }
+}, CanvasRenderingContext2D.prototype._drawImage = CanvasRenderingContext2D.prototype.drawImage, CanvasRenderingContext2D.prototype.drawImage = function () {
+  if (argümanlar [0] .src) {
+    if ( "http://agar.io/img/background.png" == argümanlar [0] .src) {
+      argümanlar [0] .src = "";
+    }
+  }
+  this._drawImage.apply (bu, argümanlar);
+};
+var Minimap = null;
+var minimapCtx = null;
+minimapBalls = {} MinimapBall.prototype = {
+  Beraberlik: function (a, b, c) {
+    Eğer (this.visible) {
+      this.lastX = (29 * this.lastX + this.x) / 30;
+      this.lastY = (29 * this.lastY + this.y) / 30;
+      var d = ((this.isDefault this.x: this.lastX) + Singa.mapOffset?) * b;
+      var e = ((this.isDefault this.y: this.lastY) + Singa.mapOffset?) * c;
+      a.fillStyle = this.color;
+      a.font = "10px Ubuntu";
+      a.textAlign = "center";
+      a.fillText ( "" == this.name? "Adsız hücre": this.name, d, e - 10);
+      a.beginPath ();
+      a.arc (d, e, 4,5, 0, 2 * Math.PI yanlış);
+      a.closePath ();
+      a.fillStyle = this.color;
+      a.fill ();
+    }
+  }
+};
+var b = new XMLHttpRequest;
+b.open (, gerçek "/mc/agario.js" "GET"), b.onload = function () {
+  var script = b.responseText;
+  script = replaceNormalFile (script 'if (js.keyCode == 32 && i1 = "nick") {js.preventDefault ()}!', "");
+  script = replaceNormalFile (script "showAds: function (i) {if", "showAds: function (i) {}, showFuck: function (i) {if");
+  script = replaceNormalFile (script "showPromoBadge: function (", "showPromoBadge: function (i) {}, fuckbacks: function (");
+  script = replaceRegexFile (script, /(return\s\w+.tab.toUpperCase\(\)).indexOf\(\w+.toUpperCase\(\)\)!=-1/, "$ 1! = 'VETERAN'" );
+  script = replaceRegexFile (script, /if\(\w+.shouldSkipConfigEntry\(\w+.productIdToQuantify.*visibility\)\)\{continue\}/, "");
+  script = replaceNormalFile (script, "eğer (this.getSkinsByCategory (i1.tabDescription) .length> 0", "if (this.getSkinsByCategory (i1.tabDescription) .length> 0 && (i1.tabDescription.toUpperCase () ==" PREMIUM "|| i1.tabDescription.toUpperCase () ==" VETERAN "|| i1.tabDescription.toUpperCase () ==" SAHİP ") ');
+  script = replaceRegexFile (script, /var\si2=window.document.createElement..script..+head.appendChild.i2../i, "Singa.reloadCore ();");
+  script = replaceRegexFile (script, /(showFreeCoins:function\(\)\{var.*showContainer\(\);if\(([a-zA-Z0-9]+[a-zA-Z0-9]+ .user.userInfo == null) * yanlış \);. ([a-zA-0-9] + [a-zA-0-9] + triggerFreeCoins \ (\)) * this.onShopClose \) \.. ) \}}) /, "$ 1 singaFreeCoins: function () {if ($ 2) {return;} $ 3;}");
+  komut = replaceNormalFile ( "onPlayerBanned: fonksiyonu (I) 'in" komut "onPlayerBanned: işlevi, (i) {} shitfacefuck: fonksiyonunu (i)");
+  script = replaceNormalFile (script "setPopupActiveState: function (i) {", "setPopupActiveState: function (i) {console.log ( 'sinir bozucu reklamı durduruldu'); return;");
+  eval (script);
+  var e = new XMLHttpRequest;
+  e.open ( "/", "GET", true);
+  e.onload = function () {
+    var a = e.responseText;
+    a = replaceNormalFile (a, "UCC6hurPo_LxL7C0YFYgYnIw", "UC_8Z8vnGJz_9jiTZXIs6izQ");
+    a = replaceRegexFile (a, / <footer [\ S \ s] * \ / altbilgi> / i, "");
+    a = replaceNormalFile (a, '<script src = "agario.core.js" uyumsuz> \ x3c / script>', "<div id = 'botcanvas' style = 'background: RGBA (0,0,0,0.4) ; genişliği: 200px; top: 5px; sol: 9px; display: block; position: absolute; text-align: center; font-size: 15px; color: #ffffff; padding: 5px; font-family: Darbe; '> <font color = '# 7FFF00'> u-Bot.ml </ font> <br> Arama motorları: <a id='botCount'> <font color = 'red'> 0/5 </ font> </a> <br> <font color = '# FFFFFF'> A </ font> - Fare taşı: <a id='ismoveToMouse'> <font color = '# 7FFF00'> Açık </ font> </a> <br > <font color = '# FFFFFF'> P </ font> - Peletlerini toplayın: <a id='collectPellets'> <font color = 'red'> Kapalı </ font> </a> <br> <font color = '# FFFFFF'> D </ font> - Hareket Dur: <a id='isStopMove'> <font color = 'red'> Kapalı </ font> </a> </ div> ");
+    a = replaceNormalFile (a, "<body>", "<body onload =" Singa.loadCore () "> ');
+    a = replaceRegexFile (a, / <script type = "text \ / javascript" src = "mc \ / agario \ Js *."> <\ / script> / i, "");
+    a = replaceRegexFile (a, / <div id = "adsBottom" * display: block;. "> / i, '<div id =" adsBottom "style =" display: none ">');
+    a = replaceNormalFile (a, '<div class = "diep çapraz" style = "', '<div class =" diep çapraz "style =" display: none;');
+    a = replaceNormalFile (a, '<div id = "promo-rozet-container">', '<div id = "promo-rozet-konteyner" style = "display: none;">');
+    a = replaceNormalFile (a, '<span veri itr = "page_instructions_w"> </ span> <br/>', '<span veri itr = "page_instructions_w"> </ span> <br/> <span> Basın <b> S </ b> hızlı ateş kütlesi </ span> </ b> W çift bölünmüş </ span> <br> <span> <b> Hold <br> <span> <b> M tuşuna basın < / b> Minimap göstermek / gizlemek için </ span> <br> <span> için <b> E </ b> botlar </ span bölmek> <br> <span> için <b> R </ b> kitle bazı botlar çıkarmak için </ span> <br> <span> için <b> p </ b> botlar pelet toplamak yapmak için </ span> ');
+    a = replaceNormalFile (a, '<div id = "etiketleri-container">', '<div id = "liderler" class = "input-grubu" style = "margin-top: 6px;"> <span class = " girdi-grup-addon "style =" width: 75px "id =" temel-addon1 "> KURULU </ span> <input id =" afiş "type =" text "value =" "style =" width: 185px "readonly class = "form denetimi"> <button id = "leaderboardcopy" class = "btn btn-birincil" style = "float: right; genişlik: 60px; border-radius: 0px 4px 4px 0px;" veri orijinal-title = "" title = ""> kopyala </ button> </ div> <div class = "input-grubu" style = "margin-top: 6px;"> <span class = "giriş-grup-addon" style = " genişliği: 75px "id =" temel-addon1 "> UUID </ span> <input id =" UUID "type =" text "value =" '+ 
+    client_uuid + ' "style =" width: 185px "readonly class =" form denetimi "> <button id =" uuidcopy "class =" btn btn-birincil "style =" float: right; genişliği: 60px; border-radius: 0px 4px 4px 0px; "veri orijinal-title =" "title =" "> Kopyala </ button> </ div> <div class =" input-grubu "style =" margin-top: 6px; "> <span class =" giriş-grup-addon "style =" width: 75px "id =" temel-addon1 "> İSİMLERİ </ span> <input id =" botnames "class =" form denetimi "style =" genişliği: 245px "tutucu =" virgül kullanarak Ayrı bot isimleri "otofokus =" "> </ div> <div id =" etiketleri-container "> ');
+    a = replaceNormalFile (a, "</ body>", "<div style =" display: block; position: absolute; z-index: 100; işaretçi olaylar: none; sağ: 9px; alt: 9px; "> < tuval id = "minimap"> </ div> </ body> ');
+    document.open ();
+    document.write (a);
+    document.close ();
+  };
+  e.send ();
+}, B.send (), setInterval (function () {
+  Singa.realPlayerX = Singa.mapOffsetX + Singa.playerX;
+  Singa.realPlayerY = Singa.mapOffsetY + Singa.playerY;
+  moveBallOnMinimap ( "player_pointer" Singa.realPlayerX, Singa.realPlayerY);
+  moveBallOnMinimap ( "player_spectate" Singa.realPlayerX, Singa.realPlayerY);
+}, 50);
+var last_transmited_game_server = null;
+var soket = null;
+setInterval (function () {
+  if (! Singa.isAuthorized) {
+    emitPosition ();
+  }
+}, 10), setInterval (function () {
+  Eğer (Singa.isAuthorized) {
+    emitPosition ();
+  }
+  emitLocalPosition ();
+  transmit_current_server (false);
+}, 10);
+window.interval = setInterval (function () {
+  if (MC.coreWasLoaded == true && $ ( "# nick") [0]) {
+    clearInterval (aralık);
+    $ ( "# AgarTwitter") çıkartın (.);
+    $ ( "H2") replaceWith ( "<h2> u Bot </ h2>.");
+  }
+}, 100);
+
+
+
+{() Işlev skinHack
+    this.currentSkin = "";
+    this.configUrlBase = window.EnvConfig.config_url + '/' + localStorage.getItem ( 'last_config_id') + '/';
+    this.configUrl = this.configUrlBase + 'GameConfiguration.json';
+    this.skinObj = {};
+    this.rotateInterval = 1000;
+    this.playerName = '';
+    this.canUseScript = false;
+    this.downloadConfig ();
+}
+skinHack.prototype = {
+    downloadConfig: function () {
+        var onDownload = this.onDownload.bind (Bu);
+        $ .ajax ({
+            yazın: "GET",
+            url: this.configUrl,
+            başarı: function (data) {
+                onDownload (veri);
+            }
+            Hata: function (jqXHR, textStatus, errorThrown) {}
+        });
+    }
+    onDownload: function (data) {
+        this.handleSkinData (veri);
+        this.injectHtml ();
+        this.overrideSetNick ();
+        this.initSkinRotation ();
+        this.updateSkin ();
+    }
+    handleSkinData: function (data) {
+        var shopSkins = data.gameConfig [ 'Dükkanı - Skins'];
+        var equippableSkins = data.gameConfig [ 'Oyun - equippable Skins'];
+        {(;; I <equippableSkins.length i ++ i = 0 var) için
+            var cilt = equippableSkins [i];
+            this.skinObj [skin.productId] = {
+                resim: skin.image,
+                Renk: skin.cellColor
+            };
+        }
+        {(;; I <shopSkins.length i ++ i = 0 var) için
+            var cilt = shopSkins [i];
+            this.skinObj [skin.productIdToQuantify] .title = skin.title;
+        }
+    }
+    injectHtml: function () {
+        $ ( '# Reklam') gizlemek (.);
+        $ ( 'Agario-promo.') Kaldırmak (.);
+        $ ( '. Diep çapraz') (kaldır).;
+        . $ ( '#-Web teşvik agario')) (remove;
+        // $ ( '<Select id = "skinsList" class = "form denetimi" onchange = "window.skinHack.updateSkin ()" "= gerekli"> </ select> <input type = "checkbox" id = "rotateSkinCheckBox "> Döndür Skins </ input> ') insertBefore (.' # locationUnknown ');
+        $ ( '<Div class = "agario panel agario yan panelde"> <img id = "skinPreview" class = "sınırlanmıştır daire" src = "" width = "96" height = "96" style = "height: 96px; border: 3px katı rgb (0, 44, 108); margin: 0 auto; "> <br> <select id =" skinsList "class =" form denetimi "onchange =" window.skinHack.updateSkin () " auto "> <label> Cilt Rotator: </ label> <div style =" left: 13px "class =" btn "> </ select> <br> <div id =" skinRotator "style =" margin "= gerekli -grubu btn-toggle "> <düğme class =" btn btn-sm btn btn-sm aktif KAPALI> "btn ilkokul </ button> </ div" </ button> <düğmesi class = ON> "etkin btn varsayılan > </ div> </ div> '.) InsertAfter (' agario parti. ');
+
+        this.addSkinOption ({
+            Görüntü: ''
+            Renk: '0x00000000'
+            title: 'Standart Cilt'
+        });
+        (This.skinObj Var idStr) {için
+            Eğer (this.skinObj.hasOwnProperty (idStr) && this.skinObj [idStr] .title) {
+                this.addSkinOption (this.skinObj [idStr]);
+            }
+        }
+
+        $ ( '. Btn-geçiş'). () {(Fonksiyonu tıklayın
+            $ (This) .find ( 'btn.') ToggleClass ( 'aktif.');
+
+            if ($ (this) .find ( '. btn birincil'). size ()> 0) {
+                . $ (This) .find ( '. Btn') toggleClass ( 'btn ilkokul');
+            }
+            if ($ (this) .find ( '. btn-info "). size ()> 0) {
+                $ (This) .find ( 'btn.') ToggleClass ( 'btn-info.');
+            }
+
+            $ (This) .find ( 'btn.') ToggleClass ( 'btn varsayılan.');
+        });
+        this.preLoadSkins ();
+        . $ ( '# Openfl içeriği') (this.updateSkin.bind (bu)) tıklayın;
+    }
+    preLoadSkins: function () {
+        (This.skinObj içinde var anahtarının) {için
+            if (this.skinObj.hasOwnProperty (anahtar)) {
+                (New Image ()) src = this.configUrlBase + this.skinObj [key] .image.;
+            }
+        }
+    }
+    addSkinOption: function (deri) {
+		skin.title = skin.title.split ( "product_name_skin _") [1];
+        $ ( '# SkinsList') ekleme ( '<option value = "' + skin.image + ':' + skin.color + '">' + skin.title + '</ option>.');
+    }
+    overrideSetNick: function () {
+        window.MC._setNick = window.MC.setNick;
+        = Function window.MC.setNick () {
+			var adı = argümanlar [0];
+			if (isim === "") {
+			  this.playerName = "u-Bot. ml'lik"
+			  ". Ml'lik U-Bot" = isim;
+			  console.log ( 'Geçersiz Kılma');
+			} Else {
+			  this.playerName = isim;
+			}
+            window.MC._setNick (isim);
+            
+            this.updateSkin ();
+        } .bind (Bu);
+    }
+    checkSubscription: function () {
+        try {
+            Eğer (localStorage.getItem ( 'canUseScript')) {
+                this.canUseScript = JSON.parse (localStorage.getItem ( 'canUseScript') toLowerCase ().);
+            } Else {
+                localStorage.setItem ( 'canUseScript', 'sahte');
+                ) (This.promptSubscription return;
+            }
+            if (! this.canUseScript) {
+                ) (This.promptSubscription return;
+            }
+            this.canUseScript return;
+        } Catch (err) {
+            console.log (err);
+        }
+    }
+    promptSubscription: function () {
+        var sormak = window.confirm ( "Sen script kullanma Razor abone olmanız gerekir");
+        if (ask) {
+            var win = window.open ( 'https://www.youtube.com/channel/UCANzKlwcB2XqJ6HVJ4jZIJA?sub_confirmation=1', '_blank');
+            if (win) {
+                localStorage.setItem ( 'canUseScript', 'gerçek');
+                this.canUseScript = true;
+				this.updateSkin ();
+            } Else {
+                alert ( 'pop-up izin ve ilk sayfayı yenileyin lütfen!');
+            }
+        }
+        ) (This.canUseScript return;
+    }
+    updateSkin: function () {
+     
+            .: Var skinArg = $ ( '# skinsList') val () bölünmüş ( ':');.
+            var usingHackSkin = skinArg [0] .length> 0;
+            var image = usingHackSkin? this.configUrlBase + skinArg [0]: document.getElementsByClassName ( 'daire sınırlanmıştır') [0] .src;
+            var color = usingHackSkin?
+                parseInt (skinArg [1] .slice (0, skinArg [1] .length - 2)):
+            parseInt (this.rgbToHex (document.getElementsByClassName ( 'sınırlanmıştır daire') [0] .style.borderColor) .slice (1, 7), 16);
+            var adı = this.playerName;
+            window.core.registerSkin (isim, null, görüntü, görüntü 2: 0, görüntü renk: null?);
+            $ ( '# SkinPreview'). Attr ( 'src' resim)
+            var arr = [ 'üst', 'doğru', 'alt', 'sol'];
+            {(;; I <Array.length i ++ i = 0 var) için
+                . $ ( '# SkinPreview') css ( 'border-' + dizi [i] +, '-COLOR' '#' + color.toString (16));
+            }
+   
+    }
+    rgbToHex: function (renk) {
+        Eğer (color.substr (0, 1) === '#') {
+            rengini dönmek;
+        }
+        var basamak = /(.*?)rgb\((\d+), (\ d +), (\ d +) \) / exec (renkli).;
+
+        var kırmızı = parseInt (rakam [2]);
+        var yeşil = parseInt (rakam [3]);
+        var mavi = parseInt (rakam [4]);
+
+        var rgb = mavi | (Yeşil << 8) | (Kırmızı << 16);
+        Dönüş rakam [1] '#' + + rgb.toString (16);
+    }
+    initSkinRotation: function () {
+        setInterval (function () {
+            if ($ ( '. btn-geçiş'). (bulmak '. btn birincil'). html () === "ON") {
+                $ ( '# SkinsList') [0] .selectedIndex = ($ ([0] .selectedIndex + 1 '# skinsList'))% $ ( '# skinsList') [0] .length;
+                this.updateSkin ();
+            }
+        } .bind (Bu), this.rotateInterval);
+    }
+};
